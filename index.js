@@ -15,6 +15,7 @@ app.get('/dbprod',async(req,res) => {
     const pp = await project.query('SELECT * FROM `product`')
     res.send(pp);
 })
+
 //새상품db
 app.get('/pnew',async(req,res) => {
     const pn = await project.query('SELECT * FROM `pnew`')
