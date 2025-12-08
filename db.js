@@ -5,7 +5,7 @@ const project = mariadb.createPool({
     port: 3306,  
     user: 'root', 
     password: 'ROOT', 
-    database: 'sample' 
+    database: 'shop' 
 })
 
 module.exports = project;
