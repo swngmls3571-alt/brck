@@ -12,15 +12,25 @@ app.get('/dbrew', async (req, res) => {
 })
 //상품조회 
 app.get('/dbprod', async (req, res) => {
-    const pp = await project.query('SELECT * FROM `products`')
+    const keyword = req.query.keyword || "";
+    
+    let sql = "SELECT * FROM products";
+    let params = [];
+
+    if (keyword) {
+        sql += " WHERE pName LIKE ?";
+        params.push(`%${keyword}%`);
+    }
+
+    const pp = await project.query(sql, params);
     res.send(pp);
-})
+});
 //상품등록창 db 불러오게 함
 app.post('/dbprod', async (req, res) => {
     const pId = 'p' + Date.now();
     const { pName, pPrice, description, stock } = req.body;
 
-    // 필수 값 체크
+    // 필수 값 체크 (에러메시지)
     if (!pName || !pPrice) {
         return res.status(400).json({ message: "상품명과 가격을 적어주세요" });
 
