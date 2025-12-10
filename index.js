@@ -33,8 +33,8 @@ app.get('/dbprod', async (req, res) => {
     let params = [];
 
     if (keyword) {
-        sql += " WHERE pName LIKE ?";
-        params.push(`%${keyword}%`);
+        sql += " WHERE (pName LIKE? OR pcategory LIKE ?)";
+        params.push(`%${keyword}%, %${keyword}`);
     }
 
     const pp = await project.query(sql, params);
@@ -43,7 +43,7 @@ app.get('/dbprod', async (req, res) => {
 //상품등록창 db 불러오게 함
 app.post('/dbprod', img.single("img"),async (req, res) => {
     const pId = 'p' + Date.now();
-    const { pName, pPrice, description, stock } = req.body;
+    const { pName, pPrice, description, pcategory ,stock } = req.body;
     //img
     const imgPath = req.file ? "/img/" + req.file.filename : null;
 
@@ -52,14 +52,12 @@ app.post('/dbprod', img.single("img"),async (req, res) => {
         return res.status(400).json({ message: "상품명과 가격을 적어주세요" });
 
     }
-    // pPrice와 stock을 숫자로 변환
-    const price = parseInt(pPrice);
-    const stockNum = parseInt(stock) || 0;
+
 
 
     await project.query(
-        'INSERT INTO products(pId, pName,img,pPrice,description,stock) VALUES(?,?,?,?,?,?)',
-        [pId, pName, imgPath, pPrice, description, parseInt(stock)]
+        'INSERT INTO products(pId, pName,img,pPrice,pcategory,description,stock) VALUES(?,?,?,?,?,?,?)',
+        [pId, pName, imgPath, parseInt(pPrice) , pcategory,description, parseInt(stock), ]
 
     )
     res.send({ message: "상품완료", pId: pId })
