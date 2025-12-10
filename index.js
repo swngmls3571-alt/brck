@@ -2,6 +2,21 @@ const cors = require('cors');
 const express = require('express');
 const project = require('./db');
 const app = express();
+app.use('/img', express.static('img'));
+
+//img
+const multer = require('multer');
+const path = require('path'); 
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "img/");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const img = multer({ storage });
 
 app.use(express.json());
 app.use(cors());
@@ -13,7 +28,7 @@ app.get('/dbrew', async (req, res) => {
 //상품조회 
 app.get('/dbprod', async (req, res) => {
     const keyword = req.query.keyword || "";
-    
+
     let sql = "SELECT * FROM products";
     let params = [];
 
@@ -26,9 +41,11 @@ app.get('/dbprod', async (req, res) => {
     res.send(pp);
 });
 //상품등록창 db 불러오게 함
-app.post('/dbprod', async (req, res) => {
+app.post('/dbprod', img.single("img"),async (req, res) => {
     const pId = 'p' + Date.now();
     const { pName, pPrice, description, stock } = req.body;
+    //img
+    const imgPath = req.file ? "/img/" + req.file.filename : null;
 
     // 필수 값 체크 (에러메시지)
     if (!pName || !pPrice) {
@@ -38,21 +55,32 @@ app.post('/dbprod', async (req, res) => {
     // pPrice와 stock을 숫자로 변환
     const price = parseInt(pPrice);
     const stockNum = parseInt(stock) || 0;
-    // 이미지 파일 경로 처리
-    let imgPath = null;
-    if (req.file) {
-        imgPath = '/uploads' + req.file.filename; // DB에 저장할 경로
-    }    
+
 
     await project.query(
-        'INSERT INTO products(pId, pName,pPrice,description,stock) VALUES(?,?,?,?,?)',
-        [pId, pName, pPrice, description, parseInt(stock)]
+        'INSERT INTO products(pId, pName,img,pPrice,description,stock) VALUES(?,?,?,?,?,?)',
+        [pId, pName, imgPath, pPrice, description, parseInt(stock)]
 
     )
     res.send({ message: "상품완료", pId: pId })
 })
-
-
+//상품수정창
+app.put('/dbprod', async(req, res) => {
+    const { pId, stock } = req.body;
+    
+    try {
+        await project.query(
+            'UPDATE products SET stock=? WHERE pId=?',
+            [parseInt(stock), pId]
+        );
+        
+        res.json({ success: true, message: "재고 수정 완료" });
+    } catch(err) {
+        console.error("DB 에러:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+//img 다운로드 
 
 // 여기 회원가입창
 app.post('/regist', async (req, res) => {
