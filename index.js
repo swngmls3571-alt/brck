@@ -78,6 +78,23 @@ app.put('/dbprod', async(req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+//상품 삭제
+app.delete('/dbprod/delete/:pId', async(req, res) => {
+    const { pId } = req.params;
+
+    
+    try {
+        await project.query(
+            `DELETE FROM products WHERE pId=?`,
+            [pId]
+        );
+        
+        res.json({ success: true, message: "재고 삭제완료" });
+    } catch(err) {
+        console.error("DB 에러:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 //img 다운로드 
 
 // 여기 회원가입창
